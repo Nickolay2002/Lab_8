@@ -1,6 +1,6 @@
 #include<iostream>
 
-#define MAX_SIZE 30 + 1
+#define MAX_SIZE 50 + 1
 #define NEGATIVE_SIGN 9
 #define POSITIVE_SIGN 0
 
@@ -30,14 +30,17 @@ void print_array(int array[], int size)
 /// <returns></returns>
 int len(int array[], int size)
 {
-	int ZERO_VALUE = 0;
+	int i = size - 1;
+	int ZERO_VALUE = array[i];
 	// TODO define sign for negative number
 	// array[0] != 0  => ZERO_VALUE=9;
-	int i = size - 1;
+	i--;
+	// 0 0001
+	// 1000 0
 	for (; (i >= 0) && (array[i] == ZERO_VALUE); i--)
 	{
 	}
-	return i+1;
+	return i + 1;
 	// 0100 size=4   i=1 res=3
 	// revert writen
 	// 0010
@@ -92,7 +95,7 @@ void complement(int digits[], int* result, int size) //смена знака  --
 	for (int i = 0; i < size; ++i)
 		if (result[i] == 9)
 			result[i] = 0;
-		else 
+		else
 		{
 			result[i]++;
 			break;
@@ -356,9 +359,9 @@ void copy_digits(int left_operand[], const int right_operand[], int size = MAX_S
 	}
 }
 
-bool is_neg(int digits[])
+bool is_neg(int digits[], int size = MAX_SIZE)
 {
-	return digits[0] == NEGATIVE_SIGN;
+	return digits[size - 1] == NEGATIVE_SIGN;
 }
 
 /// <summary>
@@ -440,15 +443,19 @@ void div_digits(int result_quotient[], int result_remainder[], int first_operand
 	for (size_t j = 0; j < size; j++)
 	{
 		result_quotient[j] = 0;
-	}/// IN MAIN!!!!!
+	}
+	for (size_t j = 0; j < size; j++)
+	{
+		result_remainder[j] = 0;
+	}
 
-	int length_2nd = len(first_operand, size);
-	if (length_2nd > size - 1)
+	int length_1st = len(first_operand, size);
+	if (length_1st > size - 1)
 	{
 		cout << "Warning: first operand grater than size" << endl;
 		return;
 	}
-	length_2nd = len(second_operand, size);
+	int length_2nd = len(second_operand, size);
 	if (length_2nd > size - 1)
 	{
 		cout << "Warning: second operand grater than size" << endl;
@@ -464,7 +471,7 @@ void div_digits(int result_quotient[], int result_remainder[], int first_operand
 	// ++ +   0   !(a_is_nef XOR b_is_neg)  - XOR -
 	int res_sign = POSITIVE_SIGN;
 	//bool f_is_neg = is_neg(first_operand);
-	if (is_neg(first_operand) ^ is_neg(second_operand))
+	if (is_neg(first_operand, size) ^ is_neg(second_operand, size))
 	{
 		res_sign = NEGATIVE_SIGN;
 	}
@@ -475,20 +482,27 @@ void div_digits(int result_quotient[], int result_remainder[], int first_operand
 	copy_digits(second, second_operand, size);
 
 	//abs (complement) with copies of operands
-	if (is_neg(first_operand))
+	if (is_neg(first_operand, size))
 	{
 		complement(first, size);
 	}
-	if (is_neg(second_operand))
+	if (is_neg(second_operand, size))
 	{
 		complement(second, size);
+	}
+
+	/// special case when first < second 
+	if (compare_digits(first, second, size) == -1)
+	{
+		///result_quotient =0 
+		copy_digits(result_remainder, first, size);
+		return;
 	}
 
 	// only positive numbers
 	// first = 000000000123 4 788   | second = 000000223
 	int* sub_divident = new int[size];
 	sub_digits(first, sub_divident, length_2nd, size); //sub_divident = ...
-	//print_array(sub_divident, size);
 
 	// indexes:         654 3 210
 	// first = 000000000447 4 788   | second = 000000223
@@ -507,17 +521,18 @@ void div_digits(int result_quotient[], int result_remainder[], int first_operand
 	while (i >= 0) {
 
 #pragma region next_quotient_digit
-		// temp=second, previous_temp=0       n=0    ?temp<sub_divident        
+		// temp=second, previous_temp=0       n=0       ? temp<sub_divident        
 		// previous_temp = temp 
 		// temp =previous_temp + second    (n++) n=1    ? temp<sub_divident
 		// previous_temp = temp
 		// temp =previous_temp + second    (n++) n=2    ? temp<sub_divident
 		// previous_temp = temp
-		// temp =previous_temp + second        n=3    ? temp<sub_divident  true 
+		// temp =previous_temp + second        n=3      ? temp<sub_divident  true 
 		// 
-		//  sub_divident = sub_divident-previous_temp
+		//  remainder = sub_divident - previous_temp
 
-		// initialisation
+
+		// initialisation digit_tmp_previous
 		for (size_t j = 0; j <= size; j++)
 		{
 			digit_tmp_previous[j] = 0;
@@ -525,7 +540,7 @@ void div_digits(int result_quotient[], int result_remainder[], int first_operand
 		copy_digits(digit_tmp, second, size);
 		// 12//4  4+4+4+4 +4
 		// accumulation like soft multiple
-		for (n = 0; compare_digits(digit_tmp, sub_divident, size) == -1; n++) //temp>sub_divident 
+		for (n = 0; compare_digits(digit_tmp, sub_divident, size) <= 0; n++) //temp<=sub_divident
 		{
 			copy_digits(digit_tmp_previous, digit_tmp, size);
 			add_digits(digit_tmp, digit_tmp_previous, second, size);
@@ -542,7 +557,7 @@ void div_digits(int result_quotient[], int result_remainder[], int first_operand
 		// 
 	// left shift
 	// res[0] = n
-		
+
 		left_shift(result_quotient, 1, size);
 		result_quotient[0] = n;
 		//  00001  -> 00010  ->  sub_divident[0] = first[i--]  (2)
@@ -561,11 +576,6 @@ void div_digits(int result_quotient[], int result_remainder[], int first_operand
 	{
 		complement(result_quotient, size);
 	}
-/*	delete[] first;
-	delete[] second;
-	delete[] sub_divident;
-	delete[] digit_tmp_previous;
-	delete[] digit_tmp*/;
 }
 
 int main()
@@ -608,7 +618,7 @@ int main()
 	convert_to_str(result, temp_str, MAX_SIZE);
 	printf("a*b=%s\n", temp_str);
 	//a div b
-	div_digits(result, result2,  first_operand, second_operand, MAX_SIZE);
+	div_digits(result, result2, first_operand, second_operand, MAX_SIZE);
 	convert_to_str(result, temp_str, MAX_SIZE);
 	printf("a div b=%s\n", temp_str);
 	//a mod b 
