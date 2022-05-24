@@ -1,13 +1,13 @@
 #include<iostream>
 
-#define MAX_SIZE 10 + 1
+#define MAX_SIZE 30 + 1
 #define NEGATIVE_SIGN 9
 #define POSITIVE_SIGN 0
 
 using namespace std;
 
 /// <summary>
-/// print one-dimentional array
+/// print one-dimentional array FOR DEBUG
 /// </summary>
 /// <param name="array"></param>
 /// <param name="size"></param>
@@ -31,7 +31,7 @@ void print_array(int array[], int size)
 int len(int array[], int size)
 {
 	int ZERO_VALUE = 0;
-	// TODO define sign for nefative number
+	// TODO define sign for negative number
 	// array[0] != 0  => ZERO_VALUE=9;
 	int i = size - 1;
 	for (; (i >= 0) && (array[i] == ZERO_VALUE); i--)
@@ -92,7 +92,8 @@ void complement(int digits[], int* result, int size) //смена знака  --
 	for (int i = 0; i < size; ++i)
 		if (result[i] == 9)
 			result[i] = 0;
-		else {
+		else 
+		{
 			result[i]++;
 			break;
 		}
@@ -433,7 +434,6 @@ void multiply(int dest[], int first_operand[], int second_operand[], int size)
 	}
 }
 
-
 void div_digits(int result_quotient[], int result_remainder[], int first_operand[], int second_operand[], int size = MAX_SIZE)
 {
 	// initialisation with zeros
@@ -614,9 +614,13 @@ int main()
 	//a mod b 
 	convert_to_str(result2, temp_str, MAX_SIZE);
 	printf("a mod b=%s\n", temp_str);
-
 	//b div a
+	div_digits(result, result2, second_operand, first_operand, MAX_SIZE);
+	convert_to_str(result, temp_str, MAX_SIZE);
+	printf("b div a=%s\n", temp_str);
 	//b mod a
+	convert_to_str(result2, temp_str, MAX_SIZE);
+	printf("b mod a=%s\n", temp_str);
 
 
 	/// / /// / // // / / /DEBUG
